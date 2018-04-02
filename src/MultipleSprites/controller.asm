@@ -94,42 +94,135 @@ NMI:
   LDA #$02
   STA $4014       ; set the high byte (02) of the RAM address, start the transfer
 
-
 LatchController:
   LDA #$01
   STA $4016
   LDA #$00
   STA $4016       ; tell both the controllers to latch buttons
 
-
 ReadA: 
   LDA $4016       ; player 1 - A
   AND #%00000001  ; only look at bit 0
   BEQ ReadADone   ; branch to ReadADone if button is NOT pressed (0)
                   ; add instructions here to do something when button IS pressed (1)
-  LDA $0203       ; load sprite X position
-  CLC             ; make sure the carry flag is clear
-  ADC #$01        ; A = A + 1
-  STA $0203       ; save sprite X position
 ReadADone:        ; handling this button is done
   
-
 ReadB: 
   LDA $4016       ; player 1 - B
   AND #%00000001  ; only look at bit 0
   BEQ ReadBDone   ; branch to ReadBDone if button is NOT pressed (0)
                   ; add instructions here to do something when button IS pressed (1)
-  LDA $0203       ; load sprite X position
-  SEC             ; make sure carry flag is set
-  SBC #$01        ; A = A - 1
-  STA $0203       ; save sprite X position
 ReadBDone:        ; handling this button is done
 
+ReadSelect:
+  LDA $4016       ; player 1 - Select
+ReadSelectDone:
+
+ReadStart:
+  LDA $4016       ; player 1 - Start
+ReadStartDone:
+
+; We have 4 tiles starting at $0200 in 4 byte blocks
+; First byte is the Y position of the tile - Offset: #$0000
+; Fourth byte is the X position of the tile - Offset: #$0003
+
+ReadUp:
+  LDA $4016         ; player 1 - Up
+  AND #$0001        ; A & 0x1
+  BEQ ReadUpDone    ; Escape if button is not pressed
+
+  LDX #$00          ; sprite tile loop counter
+  LDY #$00          ; Memory offset to the next tile
+MoveUpLoop:
+  LDA $0200,Y       ; Load Sprite Y       
+  SEC               ; (0,0) is top left, so subtract Y pos to move up
+  SBC #$01 
+  STA $0200,Y
+
+  INY               ; Y += 4
+  INY               ; Offset to the next sprite
+  INY
+  INY               
+
+  INX               ; Apply to the next tile
+  CPX #$04
+  BNE MoveUpLoop
+ReadUpDone:
+
+ReadDown:
+  LDA $4016         ; player 1 - Down
+  AND #$0001        ; A & 0x1
+  BEQ ReadDownDone  ; Escape if button is not pressed
+
+  LDX #$00          ; sprite tile loop counter
+  LDY #$00          ; Memory offset to the next tile
+MoveDownLoop:
+  LDA $0200,Y       ; Load Sprite Y
+  CLC               
+  ADC #$01         
+  STA $0200,Y
+
+  INY               ; Y += 4
+  INY               ; Offset to the next sprite
+  INY
+  INY               
+
+  INX               ; Apply to the next tile
+  CPX #$04
+  BNE MoveDownLoop
+
+ReadDownDone:
+
+ReadLeft:
+  LDA $4016         ; player 1 - Left
+  AND #$0001        ; A & 0x1
+  BEQ ReadLeftDone  ; Escape if button is not pressed
+
+  LDX #$00          ; sprite tile loop counter
+  LDY #$00          ; Memory offset to the next tile
+MoveLeftLoop:
+  LDA $0203,Y       ; load sprite X position with Y addr offset
+  SEC               ; make sure carry flag is set
+  SBC #$01          ; A = A - 1
+  STA $0203,Y       ; save sprite X position
+
+  INY
+  INY
+  INY
+  INY               ; Y += 4
+
+  INX               ; Apply to the next tile, $0203 + Y-offset
+  CPX #$04
+  BNE MoveLeftLoop
+
+ReadLeftDone:
+
+ReadRight:
+  LDA $4016         ; player 1 - Right
+  AND #$0001        ; A & 0x1
+  BEQ ReadRightDone ; Escape if button is not pressed
+
+  LDX #$00          ; sprite tile loop counter
+  LDY #$00          ; Memory offset to the next tile
+MoveRightLoop:
+  LDA $0203,Y       ; load sprite X position with Y addr offset
+  CLC               ; make sure the carry flag is clear
+  ADC #$01          ; A = A + 1
+  STA $0203,Y         ; save sprite X position
+
+  INY               ; Y += 4
+  INY               ; X += 1
+  INY
+  INY
+  INX
+  CPX #$04          ; Until X=4
+  BNE MoveRightLoop
+
+ReadRightDone:
   
   RTI             ; return from interrupt
  
 ;;;;;;;;;;;;;;  
-  
   
   
   .bank 1
