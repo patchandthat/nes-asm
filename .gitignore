@@ -1,0 +1,6 @@
+
+*.fns
+
+*.nes
+
+tools/FCEUX/fceux\.cfg
