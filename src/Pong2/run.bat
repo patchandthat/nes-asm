@@ -1,0 +1,1 @@
+..\..\tools\FCEUX\fceux.exe pong2.nes
