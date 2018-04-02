@@ -1,0 +1,1 @@
+..\..\tools\FCEUX\fceux.exe background.nes
