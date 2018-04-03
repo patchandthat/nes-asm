@@ -4,3 +4,5 @@
 *.nes
 
 tools/FCEUX/fceux\.cfg
+
+*.deb

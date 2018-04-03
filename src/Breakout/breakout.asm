@@ -50,12 +50,12 @@ INIT_BALL_X_POS         = $80 ; Initial Ball X Pos
 INIT_BALL_Y_POS         = $C0 ; Initial Ball Y Pos
 INIT_BALL_X_DIRECTION   = $01
 INIT_BALL_Y_DIRECTION   = $00
-INIT_BALL_X_SPEED       = $02
-INIT_BALL_Y_SPEED       = $02
+INIT_BALL_X_SPEED       = $01
+INIT_BALL_Y_SPEED       = $01
 
-BOUNDARY_TOP            = $20
+BOUNDARY_TOP            = $10
 BOUNDARY_BOTTOM         = $E0
-BOUNDARY_LEFT           = $04
+BOUNDARY_LEFT           = $08
 BOUNDARY_RIGHT          = $F4
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -194,29 +194,93 @@ UpdateGameState:
     ;
     ; If start is pressed, flip game state, Paused / Playing
     ; Check the previous button states to debounce
+
+    ; bug here: If you hold START, everything locks up
     LDA buttons
-    CMP CONTROLLER_START
-    BNE SkipTogglePause     ; If start isn't currently pressed, skip
+    AND #CONTROLLER_START   ; Test the start button bit
+                            ; If start isn't pressed, zero flag will be set
+    BEQ SkipTogglePause     ; BEQ jumps when zero flag is set
     LDA buttons_debounce
-    CMP CONTROLLER_START
-    BEQ SkipTogglePause     ; If start was previously pressed, skip
+    AND #CONTROLLER_START   ; same test on previous button states
+                            ; To detect rising edge
+    BNE SkipTogglePause     ; If zero flag is set, we have the rising edge
     JSR TogglePause         ; This is the first frame where start is pressed
 
 SkipTogglePause:
     ; If we're paused, return early
     LDA game_state
-    CMP STATE_PAUSED
+    CMP #STATE_PAUSED
     BEQ ReturnFromUpdateGameState
 
     ; Process game updates
-    ; Todo: Move the ball
-    ; Todo: Detect boundary collisions
+    ; Movement
+HorizontalMovement:
+    LDA ball_x_direction
+    BEQ MoveLeft
+MoveRight:
+    LDA ball_x_pos
+    CLC
+    ADC ball_x_speed
+    STA ball_x_pos
+    JMP HorizontalMovementDone
+MoveLeft:
+    LDA ball_x_pos
+    SEC
+    SBC ball_x_speed
+    STA ball_x_pos
+HorizontalMovementDone:
+
+VerticalMovement:
+    LDA ball_y_direction
+    BEQ MoveUp
+MoveDown:
+    LDA ball_y_pos
+    CLC
+    ADC ball_y_speed
+    STA ball_y_pos
+    JMP VerticalMovementDone
+MoveUp:
+    LDA ball_y_pos
+    SEC
+    SBC ball_y_speed
+    STA ball_y_pos
+VerticalMovementDone:
+
+    ; Detect collisions
+HorizontalCollisions:
+    LDA ball_x_pos
+    CMP #BOUNDARY_RIGHT          ; Carry flag set if A > M => Ball_x > right boundary
+    BCS FlipHorizontalDirection ; Flip x direction
+    CMP #BOUNDARY_LEFT           ; ball > left boudary
+    BCS HorizontalCollisionsDone
+FlipHorizontalDirection:
+    LDA ball_x_direction
+    EOR #$01
+    STA ball_x_direction
+HorizontalCollisionsDone:
+
+VerticalCollisions:
+    LDA ball_y_pos
+    CMP #BOUNDARY_TOP
+    BCC FlipVerticalDirection
+    CMP #BOUNDARY_BOTTOM
+    BCC VerticalCollisionsDone 
+FlipVerticalDirection:
+    LDA ball_y_direction
+    EOR #$01
+    STA ball_y_direction
+VerticalCollisionsDone:
 
 ReturnFromUpdateGameState:
-
+    ; Write the ball sprite position for the next frame
+    LDA ball_x_pos
+    STA $0203
+    LDA ball_y_pos
+    STA $0200
+    ; Store the previous button states for debouncing
     LDA buttons
     STA buttons_debounce
-    RTS
+    RTS ; Return
 
 TogglePause:
     ; XOR Game state with 1
@@ -229,25 +293,25 @@ TogglePause:
 
 ResetGameState:
     ; Set game variables to initial states
-    LDA STATE_PAUSED
+    LDA #STATE_PAUSED
     STA game_state
 
-    LDA INIT_BALL_X_POS 
+    LDA #INIT_BALL_X_POS 
     STA ball_x_pos
 
-    LDA INIT_BALL_Y_POS
+    LDA #INIT_BALL_Y_POS
     STA ball_y_pos
 
-    LDA INIT_BALL_X_DIRECTION
+    LDA #INIT_BALL_X_DIRECTION
     STA ball_x_direction
 
-    LDA INIT_BALL_Y_DIRECTION
+    LDA #INIT_BALL_Y_DIRECTION
     STA ball_y_direction
 
-    LDA INIT_BALL_X_SPEED
+    LDA #INIT_BALL_X_SPEED
     STA ball_x_speed
 
-    LDA INIT_BALL_Y_SPEED
+    LDA #INIT_BALL_Y_SPEED
     STA ball_y_speed
 
     LDA #$00
