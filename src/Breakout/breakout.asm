@@ -29,6 +29,9 @@ ball_y_direction        .rs 1 ; Y direction of the ball
 ball_x_speed            .rs 1 ; Horizontal speed of the ball
 ball_y_speed            .rs 1 ; Vertical speed of the ball
 
+paddle_x_position       .rs 1 ; X position of the left-most part of the paddle
+paddle_width            .rs 1 ; How many tiles wide the paddle is
+
 ;; Constants
 ; syntax example
 ; MYCONSTANT = $FF ; Value 255, aka MYCONSTANT
@@ -52,6 +55,12 @@ INIT_BALL_X_DIRECTION   = $01
 INIT_BALL_Y_DIRECTION   = $00
 INIT_BALL_X_SPEED       = $01
 INIT_BALL_Y_SPEED       = $01
+
+    ; Todo: Modify the CHR to make some paddle middle+end sprites
+PADDLE_SPRITE_TILE      = $F0
+PADDLE_Y_POSITION       = $D4
+INIT_PADDLE_WIDTH       = $02
+INIT_PADDLE_X_POSITON   = $7F
 
 BOUNDARY_TOP            = $10
 BOUNDARY_BOTTOM         = $E0
@@ -147,7 +156,7 @@ LoadSpritesLoop:
   LDA sprites, x        ; load data from address (sprites +  x)
   STA $0200, x          ; store into RAM address ($0200 + x)
   INX                   ; X = X + 1
-  CPX #$04              ; Compare X to hex $20, decimal 32
+  CPX #$08              ; Compare X to hex $20, decimal 32
   BNE LoadSpritesLoop   ; Branch to LoadSpritesLoop if compare was Not Equal to zero
                         ; if compare was equal to 32, keep going down
 
@@ -314,6 +323,12 @@ ResetGameState:
     LDA #INIT_BALL_Y_SPEED
     STA ball_y_speed
 
+    LDA #INIT_PADDLE_WIDTH
+    STA paddle_width
+
+    LDA #INIT_PADDLE_X_POSITON
+    STA paddle_x_position
+
     LDA #$00
     STA buttons
     STA buttons_debounce
@@ -347,7 +362,8 @@ palette:
 
 sprites:
      ;vertical-pos, tile #, attributes, horizontal-pos
-  .db INIT_BALL_Y_POS, BALL_SPRITE_TILE, $00, INIT_BALL_X_POS   ;sprite 0 - ball
+  .db INIT_BALL_Y_POS, BALL_SPRITE_TILE, $00, INIT_BALL_X_POS           ;   sprite 0 - ball
+  .db PADDLE_Y_POSITION, PADDLE_SPRITE_TILE, $01, INIT_PADDLE_X_POSITON ;   sprite 1 - Paddle
 
 ;;;;;;;;;;;;;;;
 
