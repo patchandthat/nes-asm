@@ -1,6 +1,8 @@
 ;; Todo: Partition this into separate files
 ;; Startup / Main / PPU / Audio
 
+.include "controllers.asm"
+
 ;; ==========
 ;; Startup / Reset
 ;; ==========

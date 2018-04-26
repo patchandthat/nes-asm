@@ -13,11 +13,24 @@
 ; Syntax: <name> .rs <#-bytes>
 ; Convention: Lower snake case
 
+; Pointer syntax: 
+; Declare low byte, immediately followed by high byte
+; Address with : LDA [pointerLow] => '[]' takes the byte and the following byte as an address 
+; can be offset with LDA [pointerLow], x
+
 ; Starting memory address
     .rsset $0000
 
-    sleeping        .rs 1 ; Synchronize game updates with frame rate
-    controller_1    .rs 1 ; Player 1 buttons
+sleeping                    .rs 1 ; Synchronize game updates with frame rate
+
+controller_1                .rs 1 ; Player 1 buttons
+controller_2                .rs 1 ; Player 2 buttons
+controller_1_last_frame     .rs 1 ; Player 1 buttons in the previous frame
+controller_2_last_frame     .rs 1 ; Player 2 buttons in the previous frame
+controller_1_rising_edges   .rs 1 ; Player 1 buttons entering the pressed state on this frame
+controller_2_rising_edges   .rs 1 ; Player 2 buttons entering the pressed state on this frame
+
+
 
 ;; ==========
 ;; Constants
@@ -25,13 +38,22 @@
 ; Syntax: <NAME> = $<VALUE>
 ; Convention: Upper snake case
 
+;; Button bit flags
+BUTTON_A        = 1 << 7
+BUTTON_B        = 1 << 6
+BUTTON_SELECT   = 1 << 5
+BUTTON_START    = 1 << 4
+BUTTON_UP       = 1 << 3
+BUTTON_DOWN     = 1 << 2
+BUTTON_LEFT     = 1 << 1
+BUTTON_RIGHT    = 1 << 0
+
 ;; ==========
 ;; Data & Interrupt vectors
 ;; ==========
 
 .bank 1
   .org $E000
-
   .include "data.asm"
 
   .org $FFFA     ;first of the three vectors starts here

@@ -6,3 +6,5 @@
 tools/FCEUX/fceux\.cfg
 
 *.deb
+
+tools/YYChr/YYCHR\.ini
