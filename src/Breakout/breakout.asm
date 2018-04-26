@@ -31,12 +31,30 @@ controller_1_rising_edges   .rs 1 ; Player 1 buttons entering the pressed state 
 controller_2_rising_edges   .rs 1 ; Player 2 buttons entering the pressed state on this frame
 
 
-
 ;; ==========
 ;; Constants
 ;; ==========
 ; Syntax: <NAME> = $<VALUE>
 ; Convention: Upper snake case
+
+;; Control Addresses
+
+;; VPHB SINN	
+;; NMI enable (V), PPU master/slave (P), sprite height (H), background tile select (B), sprite tile select (S), increment mode (I), nametable select (NN)
+PPU_CTRL        = $2000
+;; BGRs bMmG
+;; color emphasis (BGR), sprite enable (s), background enable (b), sprite left column enable (M), background left column enable (m), greyscale (G)
+PPU_MASK        = $2001
+;; VSO- ----	
+;; vblank (V), sprite 0 hit (S), sprite overflow (O), read resets write pair for $2005/2006
+PPU_STATUS      = $2002
+OAM_ADDR        = $2003 ;; OAM read/write address
+OAM_DATA        = $2004 ;; OAM data read/write
+PPU_SCROLL      = $2005 ;; fine scroll position (two writes: X, Y)
+PPU_ADDR        = $2006 ;; PPU read/write address (two writes: MSB, LSB)
+PPU_DATA        = $2007 ;; PPU data read/write
+OAM_DMA          = $4014 ;; OAM DMA high address
+
 
 ;; Button bit flags
 BUTTON_A        = 1 << 7
@@ -102,7 +120,6 @@ WaitForEndOfNMI:
     BNE WaitForEndOfNMI
 ;; Process updates for the next frame
     JSR UpdateGameState
-
 ;; End of GameLogic
 MainLoopEnd:
     JMP MainLoop
